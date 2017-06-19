@@ -127,18 +127,9 @@ def probabilty(Theta1, Theta2, X):
 
     return (estimate, float(proba[number])*100), (estimate2, proba2*100)
 
-def get_key():
-    """Get key event"""
-    while 1:
-        event = pygame.event.poll()
-        if event.type == KEYDOWN:
-            return event.key
-        else:
-            pass
-
     
 def checkKeys(myData):
-    """test for various keyboard inputs"""
+    """Detect various keyboard inputs"""
     
     (event, background, drawColor, lineWidth, keepGoing, screen, image) = myData
     
@@ -193,9 +184,9 @@ def drawPixelated(A, screen):
 
 
 def drawStatistics():  
-    """Draw statistics about training set"""
+    """Draw statistics"""
 
-    mat_contents = sio.loadmat('newX.mat')
+    mat_contents = sio.loadmat('newX2.mat')
     Xs = mat_contents['X']
     mat_contents = sio.loadmat('newy.mat')
     ys = mat_contents['y']
@@ -256,52 +247,6 @@ def backProp(p, num_input, num_hidden, num_labels, X, yvalue, l=0.2):
     answer = vectorize(Theta1_grad, Theta2_grad)
     return answer
 
-
-def J(theta, num_input, num_hidden, num_lables,X, yvalue, l=0.2):
-    """Cost funtion"""
-    
-    Theta1 = np.reshape(theta[:num_hidden*(num_input+1)], (num_hidden,-1))
-    Theta2 = np.reshape(theta[num_hidden*(num_input+1):], (num_lables,-1))
-    m = len(X)
-    X = np.append(np.ones(shape=(X.shape[0],1)),X,axis=1)
-    J = 0
-    for i in range(m):
-        x = np.matrix(X[i])
-        w = np.zeros((10,1))
-        w[int(yvalue[i])-1] = 1
-        hx = sigmoid(Theta2*np.append([[1]], sigmoid(Theta1*x.transpose()), axis=0))
-        J += sum(-w.transpose()*np.log(hx)-(1-w).transpose()*np.log(1-hx))
-    J = J/m
-    J += (l/(2*m))*(sum(sum(Theta1[:,1:]**2)) + sum(sum(Theta2[:,1:]**2)))    
-    return float(J)
-
-def calculateGrad(p):
-    """Backpropagation method wrapper for optimization function"""
-    
-    return backProp(p, 900, 25, 10, Xtrain,ytrain)
-    
-def calculateJ(p):
-    """Costfuntion wrapper for optimization function"""
-    
-    return J(p, 900, 25, 10, Xtrain, ytrain)
-
-def callback(p):
-    """Update GUI as neural network is being trained"""
-    
-    global counter
-    global screen
-    pygame.event.get()
-    counter += 1
-    myFontDots = pygame.font.SysFont("Verdana", 110)
-    dots= []
-    if counter >= 9:
-        counter = 1
-        pygame.draw.rect(screen,(255,255,255),(355,220,400,250))
-        dots = []
-    for i in range(counter):
-        dots.append(".")
-    screen.blit(myFontDots.render("".join(dots), 1, ((150, 150, 150))), (355, 140))
-    pygame.display.flip()
 
 def button(msg,x,y,w,h,ic,ac,background,action=None):
     mouse = pygame.mouse.get_pos()

@@ -146,15 +146,6 @@ def returnAccuracy(prob, y):
             count += 1
     return round((count/len(prob))*100,2)
 
-def get_key():
-    """Get key event"""
-    while 1:
-        event = pygame.event.poll()
-        if event.type == KEYDOWN:
-            return event.key
-        else:
-            pass
-
     
 def checkKeys(myData):
     """test for various keyboard inputs"""
@@ -310,7 +301,7 @@ def calculateJ(p):
     return J(p, 900, 25, 10, Xtrain, ytrain)
 
 def callback(p):
-    """Update GUI as neural network is being trained"""
+    """!Chargement dot"""
     
     global counter
     global screen
@@ -320,7 +311,7 @@ def callback(p):
     dots= []
     if counter >= 9:
         counter = 1
-        pygame.draw.rect(screen,(255,255,255),(355,220,400,250))
+        pygame.draw.rect(screen,(255,255,255),(190,320,400,250))
         dots = []
     for i in range(counter):
         dots.append(".")
@@ -400,7 +391,6 @@ def main():
     Theta2 = np.reshape(answer[num_hidden*(num_input+1):], (num_lables,-1))
 
     acc = returnAccuracy(probabiltyForDrawing(Theta1, Theta2, Xtest), ytest)
-    sio.savemat('scaledTheta.mat', {'t': answer, 'acc': acc})
     screen.fill((0, 0, 0))
     background = pygame.Surface((360,360))
     background.fill((255, 255, 255))
