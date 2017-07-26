@@ -1,6 +1,6 @@
 # Handwritten-Digits-Recognition
 
-Handwritten digits recognition project for Poussin
+Handwritten digits recognition project
 
 Runs with Python 3.2
 
