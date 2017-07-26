@@ -5,6 +5,7 @@ import pygame
 import scipy.optimize as sc
 from pygame.locals import *
 import heapq
+import random
 
 changed = False
 counter = 0
@@ -92,17 +93,16 @@ def calculateImage(background, screen, Theta1, Theta2, lineWidth):
         image = abs(1-image/253)
         image = np.mean(image, 2) 
         image = np.matrix(image.ravel())
-        drawPixelated(image, screen)
         (value, prob), (value2, prob2) = probabilty(Theta1,Theta2,image)
         prob = round(prob,1)
         prob2 = round(prob2, 1)
                    
-        showStats(value, prob, value2, prob2)
+        return [value,prob]
 
     except:
         image = np.zeros((30,30))
 
-    return image
+    return False, False
     
 def sigmoid(z):
     """Calculate sigmoid function"""
@@ -137,15 +137,12 @@ def checkKeys(myData):
         keepGoing = False
     elif event.key == pygame.K_c:
         clear(background);
-    elif event.key == pygame.K_s:
-        drawStatistics()
 
     myData = (event, background, drawColor, lineWidth, keepGoing)
     return myData
 
 def clear(background):
     background.fill((255, 255, 255))
-    drawPixelated(np.zeros((30,30)), screen)
     return True
 
 def showStats(value, prob, value2, prob2):
@@ -168,44 +165,6 @@ def showStats(value, prob, value2, prob2):
     screen.blit(text, (10, 515))
 
     return True
-
-def drawPixelated(A, screen):  
-    """Draw 30x30 image of input""" 
-    
-    A = A.ravel()
-    A = (255-A*255).transpose()
-    size = 30
-    for x in range(size):
-        for y in range(size):
-            z=x*30+y
-            c = int(A[z])
-            pygame.draw.rect(screen,(c,c,c),(x*11+385,15+y*11,11,11))
-
-
-
-def drawStatistics():  
-    """Draw statistics"""
-
-    mat_contents = sio.loadmat('newX2.mat')
-    Xs = mat_contents['X']
-    mat_contents = sio.loadmat('newy.mat')
-    ys = mat_contents['y']
-    Xtrain, Xtest, ytrain, ytest = splitData(Xs,ys)
-    mat_contents = sio.loadmat('scaledTheta.mat')
-    acc = float(mat_contents['acc'])
-    y = ys.ravel().tolist()
-
-    myFont = pygame.font.SysFont("Verdana", 24)
-    myFont2 = pygame.font.SysFont("Verdana", 18)
-    myFont3 = pygame.font.SysFont("Verdana", 16)
-    pygame.draw.rect(screen,(255,255,255),(370,0,730,360))
-    screen.blit(myFont.render("Samples: %d" % (Xs.shape[0]), 1, ((0, 0, 0))), (400, 30))
-    screen.blit(myFont.render("Accuracy: %s" % str(acc)+"%", 1, ((0, 0, 0))), (400, 60))
-    screen.blit(myFont3.render("SAMPLE DISTRIBUTION:", 1, ((0, 0, 0))), (400, 100))
-    screen.blit(myFont2.render("Count 0 = %s" % (y.count(0)), 1, ((0, 0, 0))), (400, 120))
-    for i in range(9):
-        screen.blit(myFont2.render("Count %s = %s" % (i+1, y.count(i+1)), 1, ((0, 0, 0))), (400, 140+i*20))
-
 
 def sigmoidGradient(z):
     """Gradient of sigmoid function"""
@@ -248,52 +207,78 @@ def backProp(p, num_input, num_hidden, num_labels, X, yvalue, l=0.2):
     return answer
 
 
-def button(msg,x,y,w,h,ic,ac,background,action=None):
+def button(x,y,w,h,ic,ac,background,action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
-    print(click)
     if x+w > mouse[0] > x and y+h > mouse[1] > y:
         pygame.draw.rect(screen, ac,(x,y,w,h))
 
         if click[0] == 1 and action != None:
             if(action == "clear"):
                 clear(background)
-            elif(action == "stats"):
-                drawStatistics()
             elif(action == "quit"):
                 pygame.quit()
-                keepGoing = False  
+                keepGoing = False
+            elif (action == "play2"):
+                play2(background)
+  
     else:
         pygame.draw.rect(screen, ic,(x,y,w,h))
 
-    smallText = pygame.font.SysFont("comicsansms",20)
-    textSurf, textRect = text_objects(msg, smallText)
-    textRect.center = ( (x+(w/2)), (y+(h/2)) )
-    screen.blit(textSurf, textRect)
     
 def text_objects(text, font):
     black = (0, 0, 0)
     textSurface = font.render(text, True, black)
     return textSurface,  textSurface.get_rect()
 
+def play():
+
+    r = random.randint(0,9)
+    music = "assets/%d.wav" %(r,)
+    pygame.mixer.music.load(music)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy()==True:
+        continue
+    return r
+
+def play2(number):
+    music = "assets/%d.wav" %(number,)
+    pygame.mixer.music.load(music)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy()==True:
+        continue
+
+def wrong():
+    return True
+
 def main():
     """Main method. Draw interface"""
     
     global screen
     pygame.init()
-    screen = pygame.display.set_mode((730, 550))
-    pygame.display.set_caption("Handwriting recognition (Demo)")
+    screen = pygame.display.set_mode((900, 800)) #largeur hauteur
+    pygame.display.set_caption("Learn by playing with Foxy !")
+    screen.fill((246, 245, 242))
     
-    background = pygame.Surface((360,360))
-    background.fill((255, 255, 255))
+    header = pygame.Surface((900,50))
+    header.fill((249, 105, 14)) #couleur gauche
+
+    border = pygame.Surface((360,360))
+    border.fill((249, 105, 14)) #couleur gauche
+    background = pygame.Surface((340,340))
+    background.fill((255, 255, 255)) #couleur gauche
+
     background2 = pygame.Surface((360,360))
-    background2.fill((255, 255, 255))
-    
+
+    screen.blit(header, (0, 0))
+    screen.blit(border, (20, 70))
+    screen.blit(background, (30, 80))
+
     clock = pygame.time.Clock()
     keepGoing = True
     lineStart = (0, 0)
     drawColor = (0, 0, 0)
-    lineWidth = 15
+    lineWidth = 10
     
     inputTheta = sio.loadmat('scaledTheta.mat')
     theta = inputTheta['t']
@@ -306,6 +291,30 @@ def main():
 
     pygame.display.update()
     image = None
+
+    #play()
+    number = play()
+
+    right_img = pygame.image.load('assets/right.png')
+    wrong_img = pygame.image.load('assets/wrong.png')
+
+    fox_happy = pygame.image.load('assets/fox_happy.png')
+    fox_sad = pygame.image.load('assets/fox_sad.png')
+    fox = pygame.image.load('assets/fox.png')
+
+    chat = pygame.image.load('assets/chat.png')
+
+    myFont = pygame.font.SysFont("Verdana", 25)
+    text1 = myFont.render("Use the white area", 1, ((0, 0, 0)))
+    text2 = myFont.render("to draw the number", 1, ((0, 0, 0)))
+    text3 = myFont.render("you hear !", 1, ((0, 0, 0)))
+    screen.blit(text1, (495, 550))
+    screen.blit(text2, (495, 580))
+    screen.blit(text3, (555, 610))
+
+    screen.blit(chat,(470,500))
+    screen.blit(fox,(0,450))
+
             
     while keepGoing:
         
@@ -316,26 +325,72 @@ def main():
             elif event.type == pygame.MOUSEMOTION:
                 lineEnd = pygame.mouse.get_pos()
                 if pygame.mouse.get_pressed() == (1, 0, 0):
-                    pygame.draw.line(background, drawColor, lineStart, lineEnd, lineWidth)
+                    x1, y1 = lineStart
+                    x2, y2 = lineEnd
+                    start = (x1-30, y1-80)
+                    end = (x2-30, y2-80)
+                    pygame.draw.line(background, drawColor, start, end, lineWidth)
                 lineStart = lineEnd
             elif event.type == pygame.MOUSEBUTTONUP:
-                screen.fill((0, 0, 0))
-                screen.blit(background2, (370, 0))
+                screen.fill((246, 245, 242))
+                screen.blit(fox,(0,450))
                 #w = threading.Thread(name='worker', target=worker)
-                image = calculateImage(background, screen, Theta1, Theta2, lineWidth)
+                image,prob = calculateImage(background, screen, Theta1, Theta2, lineWidth)
+                
+                if image==number:
+                    myFont = pygame.font.SysFont("Verdana", 45)
+                    text = myFont.render("Well Done !", 1, ((41, 150, 9)))
+                    screen.blit(text, (490, 580))
+
+                    screen.blit(chat,(470,500))
+                    screen.blit(fox_happy,(0,450))
+                    screen.blit(right_img,(405,75))
+                    clear(background)
+                    number = play()
+
+                elif image!=False :
+                    if(prob > 90):  
+                        myFont = pygame.font.SysFont("Verdana", 45)
+                        text = myFont.render("Try Again !", 1, ((228, 6, 19)))
+                        screen.blit(text, (490, 580))
+
+
+                        screen.blit(chat,(470,500))
+                        screen.blit(fox_sad,(0,450))
+                        screen.blit(wrong_img,(405,75))
+                        clear(background)
+                        play2(number) 
 
             elif event.type == pygame.KEYDOWN:
                 myData = (event, background, drawColor, lineWidth, keepGoing, screen, image)
                 myData = checkKeys(myData)
                 (event, background, drawColor, lineWidth, keepGoing) = myData
 
-        screen.blit(background, (0, 0))
+
+        screen.blit(header, (0, 0))
+        screen.blit(border, (20, 70))
+        screen.blit(background, (30, 80))
+        
+        eraser_img = pygame.image.load('assets/eraser.png')
+        play_img = pygame.image.load('assets/play.png')
+        cancel_img = pygame.image.load('assets/cancel.png')
+    
+        screen.blit(eraser_img,(798,88))
+        screen.blit(play_img,(798,218))
+        screen.blit(cancel_img,(798,348))
+
+        myFont = pygame.font.SysFont("Verdana", 35)
+        text = myFont.render("Learn by playing with Foxy !", 1, ((255, 255, 255)))
+        screen.blit(text, (250, 5))
+
         pygame.display.flip()
-        button_color = (205,211,212)
-        button_color_down = (145,150,150)
-        button("Clear (C)",450,370,200,50,button_color,button_color_down,background,"clear")
-        button("Show Statistics (S)",450,430,200,50,button_color,button_color_down,background,"stats")
-        button("Quit (Q)",450,490,200,50,button_color,button_color_down,background,"quit")
+        button_color = (249, 105, 14)
+        button_color_down = (216,84,5)
+        button(780,70,100,100,button_color,button_color_down,background,"clear")
+        button(780,200,100,100,button_color,button_color_down,number,"play2")
+        button(780,330,100,100,button_color,button_color_down,background,"quit")
+
+
 
 
 if __name__ == "__main__":
